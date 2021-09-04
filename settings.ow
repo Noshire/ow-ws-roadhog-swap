@@ -1,5 +1,10 @@
 settings
 {
+	main
+	{
+		Description: "Roadhog Knockback Royale! Hit others to knock them around, and use your gun to multi-jump. Hook others to swap places!  Take a Breather is a powerful stimpack that gives you more speed, higher knockback, and mini-stun on hit. Have fun!"
+	}
+
 	lobby
 	{
 		Max FFA Players: 8
@@ -38,7 +43,7 @@ settings
 				Healing Dealt: 10%
 				Jump Vertical Speed: 200%
 				Movement Speed: 125%
-				Take a Breather Cooldown Time: 125%
+				Take a Breather Cooldown Time: 150%
 				Ultimate Generation Whole Hog: 300%
 				Whole Hog Knockback Scalar: 200%
 			}
@@ -75,6 +80,9 @@ variables
 		28: Knockback
 		29: Buffed
 		30: BuffedEffectId
+		31: BuffedStartTime
+		32: BuffedHUDId
+		33: TutorialVisible
 }
 
 subroutines
@@ -85,7 +93,7 @@ subroutines
 	11: ApplyKnockback
 }
 
-rule("Init:GlobalVariables")
+rule("Init:GlobalVars")
 {
 	event
 	{
@@ -104,56 +112,60 @@ rule("Init:GlobalVariables")
 		Global.KnockbackUpFactor = 0.250;
 		Global.KnockbackBuffedFactor = 1.500;
 		Global.KnockbackSelf = 8;
-		Global.KnockbackSelfUltimate = 3;
+		Global.KnockbackSelfUltimate = 4.500;
 		Global.BuffedMiniStunDuration = 1.500;
-		Global.BuffedDuration = 4;
+		Global.BuffedDuration = 5;
 		Global.BuffedWindupDuration = 0.500;
 	}
 }
 
-rule("__DEBUG_SpawnDummyBots")
+rule("Init:PlayerVars")
 {
 	event
 	{
-		Ongoing - Global;
-	}
-
-	conditions
-	{
-		Is Game In Progress == True;
-		Global.DEBUG == True;
+		Ongoing - Each Player;
+		All;
+		All;
 	}
 
 	actions
 	{
-		Wait(3, Ignore Condition);
-		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
-		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
-		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
-		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
-		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+		Event Player.TutorialVisible = True;
 	}
 }
 
-rule("__DEBUG_MatchStartsInstantly")
+rule("Init:PlayerHUD")
 {
 	event
 	{
-		Ongoing - Global;
-	}
-
-	conditions
-	{
-		Global.DEBUG == True;
+		Ongoing - Each Player;
+		All;
+		All;
 	}
 
 	actions
 	{
-		Set Match Time(6);
+		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
+			"{0} swaps places - jump over a pit and hook someone to score a kill.", Ability Icon String(Hero(Roadhog), Button(Ability 1))),
+			Left, 0, Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
+		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
+			"{0} and {1} knock enemies back. Knockback scales with damage.", Ability Icon String(Hero(Roadhog), Button(Primary Fire)),
+			Ability Icon String(Hero(Roadhog), Button(Melee))), Left, 1, Color(White), Color(White), Color(White), Visible To and String,
+			Default Visibility);
+		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
+			"{0} gives you more speed, knockback, and mini-stun!", Ability Icon String(Hero(Roadhog), Button(Ability 2))), Left, 2, Color(
+			White), Color(White), Color(White), Visible To and String, Default Visibility);
+		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
+			"Use {0} mid-air for extra jumps and {1} to hover.", Ability Icon String(Hero(Roadhog), Button(Primary Fire)),
+			Ability Icon String(Hero(Roadhog), Button(Ultimate))), Left, 3, Color(White), Color(White), Color(White),
+			Visible To and String, Default Visibility);
+		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
+			"Press [{0}] {1} to show/hide this tutorial. Have fun!", Input Binding String(Button(Interact)), Button(Interact)), Left, 4,
+			Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
 	}
 }
 
-rule("__DEBUG_Interact:SelfDamage")
+rule("Interact@Player:ToggleTutorial")
 {
 	event
 	{
@@ -164,13 +176,12 @@ rule("__DEBUG_Interact:SelfDamage")
 
 	conditions
 	{
-		Global.DEBUG == True;
 		Is Button Held(Event Player, Button(Interact)) == True;
 	}
 
 	actions
 	{
-		Damage(Event Player, Event Player, 50);
+		Event Player.TutorialVisible = !Event Player.TutorialVisible;
 	}
 }
 
@@ -349,8 +360,10 @@ rule("PlayerIsFiring@Roadhog@Ultimate:KnockbackSelf")
 	actions
 	{
 		Wait(0.100, Ignore Condition);
-		Apply Impulse(Event Player, -1 * Facing Direction Of(Event Player), Global.KnockbackSelfUltimate, To World,
-			Cancel Contrary Motion XYZ);
+		If(Is On Ground(Event Player) == False);
+			Apply Impulse(Event Player, -1 * Facing Direction Of(Event Player), Global.KnockbackSelfUltimate, To World,
+				Cancel Contrary Motion XYZ);
+		End;
 		Loop If Condition Is True;
 	}
 }
@@ -395,8 +408,13 @@ rule("PlayerVar[Buffed]:BecomeTrue")
 	actions
 	{
 		Set Knockback Dealt(Event Player, 100 * Global.KnockbackBuffedFactor);
+		Event Player.BuffedStartTime = Total Time Elapsed;
 		Create Effect(All Players(All Teams), Good Aura, Color(Yellow), Event Player, 1.500, Visible To Position and Radius);
 		Event Player.BuffedEffectId = Last Created Entity;
+		Create Progress Bar HUD Text(Event Player, Update Every Frame(100 * Max(0, 1 - (Total Time Elapsed - Event Player.BuffedStartTime)
+			/ Global.BuffedDuration)), Ability Icon String(Hero(Roadhog), Button(Ability 2)), Top, 100, Color(Yellow), Color(Yellow),
+			Values, Default Visibility);
+		Event Player.BuffedHUDId = Last Text ID;
 		Set Jump Vertical Speed(Event Player, 150);
 		Set Move Speed(Event Player, 175);
 	}
@@ -420,6 +438,7 @@ rule("PlayerVar[Buffed]:BecomeFalse")
 	{
 		Set Knockback Dealt(Event Player, 100);
 		Destroy Effect(Event Player.BuffedEffectId);
+		Destroy Progress Bar HUD Text(Last Text ID);
 		Set Jump Vertical Speed(Event Player, 100);
 		Set Move Speed(Event Player, 100);
 	}
@@ -442,6 +461,43 @@ rule("PlayerDied@Self:NoScoreLoss")
 	actions
 	{
 		Modify Player Score(Victim, 1);
+	}
+}
+
+disabled rule("PlayerVar[TutorialVisible]:BecomeTrue")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.TutorialVisible == True;
+	}
+
+	actions
+	{
+		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
+			"The hook swaps places - jump over a pit and hook someone to score a kill.\r\nScrap gun and melee deal knockback - push others into"),
+			Left, 0, Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
+	}
+}
+
+disabled rule("PlayerVar[TutorialVisible]:BecomeFalse")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.TutorialVisible == False;
 	}
 }
 
@@ -509,5 +565,68 @@ rule("Subroutine:StunVictimIfEventPlayerBuffed")
 		If(Event Player.Buffed == True);
 			Set Status(Victim, Event Player, Stunned, Global.BuffedMiniStunDuration);
 		End;
+	}
+}
+
+rule("__DEBUG_SpawnDummyBots")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+		Global.DEBUG == True;
+	}
+
+	actions
+	{
+		Wait(3, Ignore Condition);
+		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+	}
+}
+
+rule("__DEBUG_MatchStartsInstantly")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global.DEBUG == True;
+	}
+
+	actions
+	{
+		Set Match Time(6);
+	}
+}
+
+rule("__DEBUG_Interact:SelfDamage")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Global.DEBUG == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+	}
+
+	actions
+	{
+		Damage(Event Player, Event Player, 50);
 	}
 }
