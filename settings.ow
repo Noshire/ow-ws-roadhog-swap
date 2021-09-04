@@ -65,6 +65,9 @@ variables
 		34: KnockbackBuffedFactor
 		35: KnockbackSelf
 		36: KnockbackSelfUltimate
+		37: BuffedMiniStunDuration
+		38: BuffedDuration
+		39: BuffedWindupDuration
 
 	player:
 		26: TargetPosition
@@ -102,6 +105,9 @@ rule("Init:GlobalVariables")
 		Global.KnockbackBuffedFactor = 1.500;
 		Global.KnockbackSelf = 8;
 		Global.KnockbackSelfUltimate = 3;
+		Global.BuffedMiniStunDuration = 1.500;
+		Global.BuffedDuration = 4;
+		Global.BuffedWindupDuration = 0.500;
 	}
 }
 
@@ -198,6 +204,8 @@ rule("PlayerDealtDamage@Roadhog@Ability1:Swap&Tag")
 		Cancel Primary Action(Event Player);
 		Play Effect(All Players(All Teams), Buff Explosion Sound, Color(White), Event Player, 100);
 		Play Effect(All Players(All Teams), Debuff Impact Sound, Color(White), Victim, 100);
+		Wait(0.100, Ignore Condition);
+		Call Subroutine(StunVictimIfEventPlayerBuffed);
 	}
 }
 
@@ -347,7 +355,7 @@ rule("PlayerIsFiring@Roadhog@Ultimate:KnockbackSelf")
 	}
 }
 
-rule("PlayerUsedAbility@Roadhog@TakeABreather:SpeedUp&ApplyBuffed")
+rule("PlayerUsedAbility@Roadhog@TakeABreather:ApplyBuffed")
 {
 	event
 	{
@@ -363,15 +371,53 @@ rule("PlayerUsedAbility@Roadhog@TakeABreather:SpeedUp&ApplyBuffed")
 
 	actions
 	{
-		Wait(0.500, Abort When False);
+		Wait(Global.BuffedWindupDuration, Abort When False);
+		Event Player.Buffed = True;
+		Wait(Global.BuffedDuration, Ignore Condition);
+		Event Player.Buffed = False;
+	}
+}
+
+rule("PlayerVar[Buffed]:BecomeTrue")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.Buffed == True;
+	}
+
+	actions
+	{
 		Set Knockback Dealt(Event Player, 100 * Global.KnockbackBuffedFactor);
 		Create Effect(All Players(All Teams), Good Aura, Color(Yellow), Event Player, 1.500, Visible To Position and Radius);
 		Event Player.BuffedEffectId = Last Created Entity;
-		Event Player.Buffed = True;
 		Set Jump Vertical Speed(Event Player, 150);
 		Set Move Speed(Event Player, 175);
-		Wait(3.500, Ignore Condition);
-		Event Player.Buffed = False;
+	}
+}
+
+rule("PlayerVar[Buffed]:BecomeFalse")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.Buffed == False;
+	}
+
+	actions
+	{
 		Set Knockback Dealt(Event Player, 100);
 		Destroy Effect(Event Player.BuffedEffectId);
 		Set Jump Vertical Speed(Event Player, 100);
@@ -460,9 +506,8 @@ rule("Subroutine:StunVictimIfEventPlayerBuffed")
 
 	actions
 	{
-		Log To Inspector(Custom String("EventPlayer Buffed: {0}", Event Player.Buffed));
 		If(Event Player.Buffed == True);
-			Set Status(Victim, Event Player, Stunned, 1);
+			Set Status(Victim, Event Player, Stunned, Global.BuffedMiniStunDuration);
 		End;
 	}
 }
