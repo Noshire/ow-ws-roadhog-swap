@@ -110,9 +110,9 @@ rule("Init:GlobalVars")
 		Global.InvertAttackerDirectionOnSwap = True;
 		Global.InvertVictimDirectionOnSwap = True;
 		Global.KnockbackMin = 0;
-		Global.KnockbackMax = 50;
-		Global.KnockbackBase = 0;
-		Global.KnockbackDamageFactor = 1;
+		Global.KnockbackMax = 60;
+		Global.KnockbackBase = 3;
+		Global.KnockbackDamageFactor = 1.750;
 		Global.KnockbackUpFactor = 0.250;
 		Global.KnockbackBuffedFactor = 1.500;
 		Global.KnockbackSelf = 8;
