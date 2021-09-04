@@ -55,6 +55,8 @@ variables
 {
 	global:
 		26: DEBUG
+		27: InvertAttackerDirectionOnSwap
+		28: InvertVictimDirectionOnSwap
 
 	player:
 		26: TargetPosition
@@ -146,8 +148,12 @@ rule("PlayerDealtDamage@Roadhog@Ability1:Swap&Tag")
 		Event Player.TargetFacing = -1 * Facing Direction Of(Event Player);
 		Teleport(Victim, Position Of(Event Player));
 		Teleport(Event Player, Event Player.TargetPosition);
-		Set Facing(Victim, Facing Direction Of(Event Player), To World);
-		Set Facing(Event Player, Event Player.TargetFacing, To World);
+		If(Global.InvertVictimDirectionOnSwap == True);
+			Set Facing(Victim, Facing Direction Of(Event Player), To World);
+		End;
+		If(Global.InvertAttackerDirectionOnSwap == True);
+			Set Facing(Event Player, Event Player.TargetFacing, To World);
+		End;
 		Cancel Primary Action(Event Player);
 		Play Effect(All Players(All Teams), Buff Explosion Sound, Color(White), Event Player, 100);
 		Play Effect(All Players(All Teams), Debuff Impact Sound, Color(White), Victim, 100);
