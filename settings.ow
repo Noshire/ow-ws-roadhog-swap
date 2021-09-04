@@ -34,7 +34,7 @@ settings
 			Roadhog
 			{
 				Chain Hook Cooldown Time: 25%
-				Damage Dealt: 10%
+				Damage Dealt: 20%
 				Healing Dealt: 10%
 				Jump Vertical Speed: 200%
 				Movement Speed: 125%
@@ -90,7 +90,7 @@ rule("Init:GlobalVariables")
 		Global.KnockbackMin = 0;
 		Global.KnockbackMax = 50;
 		Global.KnockbackBase = 0;
-		Global.KnockbackDamageScalar = 5;
+		Global.KnockbackDamageScalar = 2.500;
 		Global.KnockbackUpFactor = 0.250;
 	}
 }
