@@ -1,0 +1,352 @@
+settings
+{
+	lobby
+	{
+		Max FFA Players: 8
+	}
+
+	modes
+	{
+		Deathmatch
+		{
+			Game Length In Minutes: 15
+			Score To Win: 15
+
+			enabled maps
+			{
+				Ilios Well
+				Lijiang Garden
+				Necropolis
+				Nepal Sanctum
+			}
+		}
+
+		General
+		{
+			Game Mode Start: Immediately
+			Hero Limit: Off
+		}
+	}
+
+	heroes
+	{
+		General
+		{
+			Roadhog
+			{
+				Chain Hook Cooldown Time: 25%
+				Damage Dealt: 10%
+				Healing Dealt: 10%
+				Jump Vertical Speed: 200%
+				Movement Speed: 125%
+				Take a Breather Cooldown Time: 50%
+				Ultimate Generation Whole Hog: 150%
+				Whole Hog Knockback Scalar: 200%
+			}
+
+			enabled heroes
+			{
+				Roadhog
+			}
+		}
+	}
+}
+
+variables
+{
+	global:
+		26: DEBUG
+
+	player:
+		26: TargetPosition
+		27: TargetFacing
+		28: Knockback
+}
+
+subroutines
+{
+	8: Knockback
+	9: KnockbackSelf
+}
+
+rule("Init:GlobalVariables")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.DEBUG = False;
+	}
+}
+
+rule("__DEBUG_BOTS")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+		Global.DEBUG == True;
+	}
+
+	actions
+	{
+		Wait(3, Ignore Condition);
+		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+		Create Dummy Bot(Hero(Roadhog), All Teams, -1, Position Of(Players In Slot(0, All Teams)), Vector(0, 0, 0));
+	}
+}
+
+rule("__DEBUG_INSTASTART")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global.DEBUG == True;
+	}
+
+	actions
+	{
+		Set Match Time(6);
+	}
+}
+
+rule("PlayerDealtDamage@Roadhog@Ability1:Swap&Tag")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Is Using Ability 1(Event Player) == True;
+	}
+
+	actions
+	{
+		Set Environment Credit Player(Victim, Event Player);
+		Event Player.TargetPosition = Position Of(Victim);
+		Event Player.TargetFacing = -1 * Facing Direction Of(Event Player);
+		Teleport(Victim, Position Of(Event Player));
+		Teleport(Event Player, Event Player.TargetPosition);
+		Set Facing(Victim, Facing Direction Of(Event Player), To World);
+		Set Facing(Event Player, Event Player.TargetFacing, To World);
+		Cancel Primary Action(Event Player);
+		Play Effect(All Players(All Teams), Buff Explosion Sound, Color(White), Event Player, 100);
+		Play Effect(All Players(All Teams), Debuff Impact Sound, Color(White), Victim, 100);
+	}
+}
+
+rule("PlayerDealtDamage@Roadhog@Primary:Knockback&Tag")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Event Ability == Button(Primary Fire);
+	}
+
+	actions
+	{
+		Set Environment Credit Player(Victim, Event Player);
+		Call Subroutine(Knockback);
+	}
+}
+
+rule("PlayerDealtDamage@Roadhog@Secondary:Knockback&Tag")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Event Ability == Button(Secondary Fire);
+	}
+
+	actions
+	{
+		Set Environment Credit Player(Victim, Event Player);
+		Call Subroutine(Knockback);
+	}
+}
+
+rule("PlayerDealtDamage@Roadhog@Melee:Knockback&Tag")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Event Ability == Button(Melee);
+	}
+
+	actions
+	{
+		Set Environment Credit Player(Victim, Event Player);
+		Apply Impulse(Victim, Vector(X Component Of(Event Direction), 0.250, Z Component Of(Event Direction)), 50, To World,
+			Cancel Contrary Motion);
+	}
+}
+
+rule("PlayerDealtDamage@Roadhog@Ultimate:Tag")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Event Ability == Button(Ultimate);
+	}
+
+	actions
+	{
+		Set Environment Credit Player(Victim, Event Player);
+	}
+}
+
+rule("PlayerFired@Roadhog@NotGrounded@Primary:KnockbackSelf")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Is Firing Primary(Event Player) == True;
+		Is On Ground(Event Player) == False;
+	}
+
+	actions
+	{
+		Call Subroutine(KnockbackSelf);
+	}
+}
+
+rule("PlayerFired@Roadhog@NotGrounded@Secondary:KnockbackSelf")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Is Firing Secondary(Event Player) == True;
+		Is On Ground(Event Player) == False;
+	}
+
+	actions
+	{
+		Call Subroutine(KnockbackSelf);
+	}
+}
+
+rule("PlayerIsFiring@Roadhog@Ultimate:KnockbackSelf")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Using Ultimate(Event Player) == True;
+	}
+
+	actions
+	{
+		Wait(0.100, Ignore Condition);
+		Apply Impulse(Event Player, -1 * Facing Direction Of(Event Player), 2, To World, Cancel Contrary Motion XYZ);
+		Loop If Condition Is True;
+	}
+}
+
+rule("PlayerDied@Self:NoScoreLoss")
+{
+	event
+	{
+		Player Died;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Victim == Attacker;
+	}
+
+	actions
+	{
+		Modify Player Score(Victim, 1);
+	}
+}
+
+rule("Subroutine:Knockback")
+{
+	event
+	{
+		Subroutine;
+		Knockback;
+	}
+
+	actions
+	{
+		Victim.Knockback = Min(50, Max(0, Event Damage * 5));
+		Apply Impulse(Victim, Vector(X Component Of(Event Direction), 0.250, Z Component Of(Event Direction)), Victim.Knockback, To World,
+			Cancel Contrary Motion);
+	}
+}
+
+rule("Subroutine:KnockbackSelf")
+{
+	event
+	{
+		Subroutine;
+		KnockbackSelf;
+	}
+
+	actions
+	{
+		Apply Impulse(Event Player, -1 * Facing Direction Of(Event Player), 8, To World, Cancel Contrary Motion XYZ);
+	}
+}
