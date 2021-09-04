@@ -57,6 +57,11 @@ variables
 		26: DEBUG
 		27: InvertAttackerDirectionOnSwap
 		28: InvertVictimDirectionOnSwap
+		29: KnockbackMin
+		30: KnockbackMax
+		31: KnockbackBase
+		32: KnockbackDamageScalar
+		33: KnockbackUpFactor
 
 	player:
 		26: TargetPosition
@@ -82,6 +87,11 @@ rule("Init:GlobalVariables")
 		disabled Global.DEBUG = True;
 		Global.InvertAttackerDirectionOnSwap = True;
 		Global.InvertVictimDirectionOnSwap = True;
+		Global.KnockbackMin = 0;
+		Global.KnockbackMax = 50;
+		Global.KnockbackBase = 0;
+		Global.KnockbackDamageScalar = 5;
+		Global.KnockbackUpFactor = 0.250;
 	}
 }
 
@@ -219,8 +229,8 @@ rule("PlayerDealtDamage@Roadhog@Melee:Knockback&Tag")
 	actions
 	{
 		Set Environment Credit Player(Victim, Event Player);
-		Apply Impulse(Victim, Vector(X Component Of(Event Direction), 0.250, Z Component Of(Event Direction)), 50, To World,
-			Cancel Contrary Motion);
+		Apply Impulse(Victim, Vector(X Component Of(Event Direction), Global.KnockbackUpFactor, Z Component Of(Event Direction)),
+			Global.KnockbackMax, To World, Cancel Contrary Motion);
 	}
 }
 
@@ -338,9 +348,10 @@ rule("Subroutine:Knockback")
 
 	actions
 	{
-		Victim.Knockback = Min(50, Max(0, Event Damage * 5));
-		Apply Impulse(Victim, Vector(X Component Of(Event Direction), 0.250, Z Component Of(Event Direction)), Victim.Knockback, To World,
-			Cancel Contrary Motion);
+		Victim.Knockback = Min(Global.KnockbackMax, Max(Global.KnockbackMin,
+			Global.KnockbackBase + Event Damage * Global.KnockbackDamageScalar));
+		Apply Impulse(Victim, Vector(X Component Of(Event Direction), Global.KnockbackUpFactor, Z Component Of(Event Direction)),
+			Victim.Knockback, To World, Cancel Contrary Motion);
 	}
 }
 
