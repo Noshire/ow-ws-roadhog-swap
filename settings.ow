@@ -42,12 +42,12 @@ settings
 		{
 			Roadhog
 			{
-				Chain Hook Cooldown Time: 25%
-				Damage Dealt: 20%
-				Healing Dealt: 10%
+				Chain Hook Cooldown Time: 40%
+				Damage Dealt: 50%
+				Healing Dealt: 30%
 				Jump Vertical Speed: 200%
 				Movement Speed: 125%
-				Take a Breather Cooldown Time: 150%
+				Take a Breather Cooldown Time: 175%
 				Ultimate Generation Whole Hog: 300%
 				Whole Hog Knockback Scalar: 200%
 			}
@@ -112,12 +112,12 @@ rule("Init:GlobalVars")
 		Global.KnockbackMin = 0;
 		Global.KnockbackMax = 50;
 		Global.KnockbackBase = 0;
-		Global.KnockbackDamageFactor = 2.500;
+		Global.KnockbackDamageFactor = 1;
 		Global.KnockbackUpFactor = 0.250;
 		Global.KnockbackBuffedFactor = 1.500;
 		Global.KnockbackSelf = 8;
 		Global.KnockbackSelfUltimate = 4.500;
-		Global.BuffedMiniStunDuration = 1.500;
+		Global.BuffedMiniStunDuration = 1;
 		Global.BuffedDuration = 5;
 		Global.BuffedWindupDuration = 0.500;
 	}
@@ -207,18 +207,20 @@ rule("PlayerDealtDamage@Roadhog@Ability1:Swap&Tag")
 	{
 		Set Environment Credit Player(Victim, Event Player);
 		Event Player.TargetPosition = Position Of(Victim);
-		Event Player.TargetFacing = -1 * Facing Direction Of(Event Player);
+		Event Player.TargetFacing = Direction Towards(Eye Position(Victim), Eye Position(Event Player));
+		Victim.TargetFacing = Direction Towards(Eye Position(Event Player), Eye Position(Victim));
 		Teleport(Victim, Position Of(Event Player));
 		Teleport(Event Player, Event Player.TargetPosition);
+		Cancel Primary Action(Event Player);
+		Play Effect(All Players(All Teams), Buff Explosion Sound, Color(White), Event Player, 100);
+		Play Effect(All Players(All Teams), Debuff Impact Sound, Color(White), Victim, 100);
+		Apply Impulse(Victim, Vector(0, 0, 0), 0, To World, Cancel Contrary Motion XYZ);
 		If(Global.InvertVictimDirectionOnSwap == True);
-			Set Facing(Victim, Facing Direction Of(Event Player), To World);
+			Set Facing(Victim, Victim.TargetFacing, To World);
 		End;
 		If(Global.InvertAttackerDirectionOnSwap == True);
 			Set Facing(Event Player, Event Player.TargetFacing, To World);
 		End;
-		Cancel Primary Action(Event Player);
-		Play Effect(All Players(All Teams), Buff Explosion Sound, Color(White), Event Player, 100);
-		Play Effect(All Players(All Teams), Debuff Impact Sound, Color(White), Victim, 100);
 		Wait(0.100, Ignore Condition);
 		Call Subroutine(StunVictimIfEventPlayerBuffed);
 	}
@@ -413,7 +415,8 @@ rule("PlayerVar[Buffed]:BecomeTrue")
 	{
 		Set Knockback Dealt(Event Player, 100 * Global.KnockbackBuffedFactor);
 		Event Player.BuffedStartTime = Total Time Elapsed;
-		Create Effect(All Players(All Teams), Good Aura, Color(Yellow), Event Player, 1.500, Visible To Position and Radius);
+		Create Effect(Filtered Array(All Players(All Teams), Current Array Element != Event Player), Good Aura, Color(Yellow),
+			Event Player, 1.100, Visible To Position and Radius);
 		Event Player.BuffedEffectId = Last Created Entity;
 		Create Progress Bar HUD Text(Event Player, Update Every Frame(100 * Max(0, 1 - (Total Time Elapsed - Event Player.BuffedStartTime)
 			/ Global.BuffedDuration)), Ability Icon String(Hero(Roadhog), Button(Ability 2)), Top, 100, Color(Yellow), Color(Yellow),
@@ -468,40 +471,18 @@ rule("PlayerDied@Self:NoScoreLoss")
 	}
 }
 
-disabled rule("PlayerVar[TutorialVisible]:BecomeTrue")
+rule("PlayerDied:RemoveBuff")
 {
 	event
 	{
-		Ongoing - Each Player;
+		Player Died;
 		All;
-		All;
-	}
-
-	conditions
-	{
-		Event Player.TutorialVisible == True;
+		Roadhog;
 	}
 
 	actions
 	{
-		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
-			"The hook swaps places - jump over a pit and hook someone to score a kill.\r\nScrap gun and melee deal knockback - push others into"),
-			Left, 0, Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
-	}
-}
-
-disabled rule("PlayerVar[TutorialVisible]:BecomeFalse")
-{
-	event
-	{
-		Ongoing - Each Player;
-		All;
-		All;
-	}
-
-	conditions
-	{
-		Event Player.TutorialVisible == False;
+		Event Player.Buffed = False;
 	}
 }
 
@@ -572,7 +553,7 @@ rule("Subroutine:StunVictimIfEventPlayerBuffed")
 	}
 }
 
-rule("__DEBUG_SpawnDummyBots")
+rule("[DEBUG]SpawnDummyBots")
 {
 	event
 	{
@@ -596,7 +577,7 @@ rule("__DEBUG_SpawnDummyBots")
 	}
 }
 
-rule("__DEBUG_MatchStartsInstantly")
+rule("[DEBUG]MatchStartsInstantly")
 {
 	event
 	{
@@ -614,7 +595,7 @@ rule("__DEBUG_MatchStartsInstantly")
 	}
 }
 
-rule("__DEBUG_Interact:SelfDamage")
+rule("[DEBUG]Interact:SelfDamage")
 {
 	event
 	{
