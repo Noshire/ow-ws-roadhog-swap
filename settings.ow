@@ -29,10 +29,9 @@ settings
 
 		General
 		{
-			Game Length In Minutes: 15
 			Game Mode Start: Immediately
 			Hero Limit: Off
-			Score To Win: 15
+			Score To Win: 10
 		}
 	}
 
