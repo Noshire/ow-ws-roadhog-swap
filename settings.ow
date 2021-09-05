@@ -121,7 +121,7 @@ rule("Init:GlobalVars")
 		Global.BuffedMiniStunDuration = 1;
 		Global.BuffedDuration = 5;
 		Global.BuffedWindupDuration = 0.500;
-		Global.SwapFlingForce = 50;
+		Global.SwapFlingForce = 35;
 	}
 }
 
