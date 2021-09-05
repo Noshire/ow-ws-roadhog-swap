@@ -41,6 +41,7 @@ settings
 		{
 			Roadhog
 			{
+				Ammunition Clip Size Scalar: 60%
 				Chain Hook Cooldown Time: 40%
 				Damage Dealt: 50%
 				Healing Dealt: 30%
@@ -76,6 +77,7 @@ variables
 		37: BuffedMiniStunDuration
 		38: BuffedDuration
 		39: BuffedWindupDuration
+		40: SwapFlingForce
 
 	player:
 		26: TargetPosition
@@ -109,16 +111,17 @@ rule("Init:GlobalVars")
 		Global.InvertAttackerDirectionOnSwap = True;
 		Global.InvertVictimDirectionOnSwap = True;
 		Global.KnockbackMin = 0;
-		Global.KnockbackMax = 60;
+		Global.KnockbackMax = 70;
 		Global.KnockbackBase = 3;
-		Global.KnockbackDamageFactor = 1.750;
+		Global.KnockbackDamageFactor = 2;
 		Global.KnockbackUpFactor = 0.250;
 		Global.KnockbackBuffedFactor = 1.500;
-		Global.KnockbackSelf = 8;
+		Global.KnockbackSelf = 12;
 		Global.KnockbackSelfUltimate = 4.500;
 		Global.BuffedMiniStunDuration = 1;
 		Global.BuffedDuration = 5;
 		Global.BuffedWindupDuration = 0.500;
+		Global.SwapFlingForce = 50;
 	}
 }
 
@@ -213,13 +216,13 @@ rule("PlayerDealtDamage@Roadhog@Ability1:Swap&Tag")
 		Cancel Primary Action(Event Player);
 		Play Effect(All Players(All Teams), Buff Explosion Sound, Color(White), Event Player, 100);
 		Play Effect(All Players(All Teams), Debuff Impact Sound, Color(White), Victim, 100);
-		Apply Impulse(Victim, Vector(0, 0, 0), 0, To World, Cancel Contrary Motion XYZ);
 		If(Global.InvertVictimDirectionOnSwap == True);
 			Set Facing(Victim, Victim.TargetFacing, To World);
 		End;
 		If(Global.InvertAttackerDirectionOnSwap == True);
 			Set Facing(Event Player, Event Player.TargetFacing, To World);
 		End;
+		Apply Impulse(Victim, Event Player.TargetFacing, Global.SwapFlingForce, To World, Cancel Contrary Motion XYZ);
 		Wait(0.100, Ignore Condition);
 		Call Subroutine(StunVictimIfEventPlayerBuffed);
 	}
