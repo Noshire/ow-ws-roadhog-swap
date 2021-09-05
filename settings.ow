@@ -148,23 +148,23 @@ rule("Init:PlayerHUD")
 
 	actions
 	{
-		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
-			"{0} swaps places - jump over a pit and hook someone to score a kill.", Ability Icon String(Hero(Roadhog), Button(Ability 1))),
-			Left, 0, Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
-		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
-			"{0} and {1} knock enemies back. Knockback scales with damage.", Ability Icon String(Hero(Roadhog), Button(Primary Fire)),
-			Ability Icon String(Hero(Roadhog), Button(Melee))), Left, 1, Color(White), Color(White), Color(White), Visible To and String,
-			Default Visibility);
-		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
-			"{0} gives you more speed, knockback, and mini-stun!", Ability Icon String(Hero(Roadhog), Button(Ability 2))), Left, 2, Color(
-			White), Color(White), Color(White), Visible To and String, Default Visibility);
-		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
-			"Use {0} mid-air for extra jumps and {1} to hover.", Ability Icon String(Hero(Roadhog), Button(Primary Fire)),
+		Create HUD Text(Event Player.TutorialVisible && Hero Of(Event Player) == Hero(Roadhog) ? Event Player : Null, Null, Null,
+			Custom String("{0} swaps places - jump over a pit and hook someone to score a kill.", Ability Icon String(Hero(Roadhog),
+			Button(Ability 1))), Left, 0, Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
+		Create HUD Text(Event Player.TutorialVisible && Hero Of(Event Player) == Hero(Roadhog) ? Event Player : Null, Null, Null,
+			Custom String("{0} and {1} knock enemies back. Knockback scales with damage.", Ability Icon String(Hero(Roadhog), Button(
+			Primary Fire)), Ability Icon String(Hero(Roadhog), Button(Melee))), Left, 1, Color(White), Color(White), Color(White),
+			Visible To and String, Default Visibility);
+		Create HUD Text(Event Player.TutorialVisible && Hero Of(Event Player) == Hero(Roadhog) ? Event Player : Null, Null, Null,
+			Custom String("{0} gives you more speed, knockback, and mini-stun!", Ability Icon String(Hero(Roadhog), Button(Ability 2))),
+			Left, 2, Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
+		Create HUD Text(Event Player.TutorialVisible && Hero Of(Event Player) == Hero(Roadhog) ? Event Player : Null, Null, Null,
+			Custom String("Use {0} mid-air for extra jumps and {1} to hover.", Ability Icon String(Hero(Roadhog), Button(Primary Fire)),
 			Ability Icon String(Hero(Roadhog), Button(Ultimate))), Left, 3, Color(White), Color(White), Color(White),
 			Visible To and String, Default Visibility);
-		Create HUD Text(Event Player.TutorialVisible ? Event Player : Null, Null, Null, Custom String(
-			"Press [{0}] {1} to show/hide this tutorial. Have fun!", Input Binding String(Button(Interact)), Button(Interact)), Left, 4,
-			Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
+		Create HUD Text(Event Player.TutorialVisible && Hero Of(Event Player) == Hero(Roadhog) ? Event Player : Null, Null, Null,
+			Custom String("Press [{0}] {1} to show/hide this tutorial. Have fun!", Input Binding String(Button(Interact)), Button(
+			Interact)), Left, 4, Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
 	}
 }
 
