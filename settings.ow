@@ -354,7 +354,7 @@ rule("PlayerIsFiring@Roadhog@Ultimate:KnockbackSelf")
 	{
 		Ongoing - Each Player;
 		All;
-		All;
+		Roadhog;
 	}
 
 	conditions
@@ -379,7 +379,7 @@ rule("PlayerUsedAbility@Roadhog@TakeABreather:ApplyBuffed")
 	{
 		Ongoing - Each Player;
 		All;
-		All;
+		Roadhog;
 	}
 
 	conditions
@@ -392,6 +392,21 @@ rule("PlayerUsedAbility@Roadhog@TakeABreather:ApplyBuffed")
 		Wait(Global.BuffedWindupDuration, Abort When False);
 		Event Player.Buffed = True;
 		Wait(Global.BuffedDuration, Ignore Condition);
+		Event Player.Buffed = False;
+	}
+}
+
+rule("PlayerDied@Roadhog:RemoveBuffed")
+{
+	event
+	{
+		Player Died;
+		All;
+		Roadhog;
+	}
+
+	actions
+	{
 		Event Player.Buffed = False;
 	}
 }
@@ -467,21 +482,6 @@ rule("PlayerDied@Self:NoScoreLoss")
 	actions
 	{
 		Modify Player Score(Victim, 1);
-	}
-}
-
-rule("PlayerDied:RemoveBuff")
-{
-	event
-	{
-		Player Died;
-		All;
-		Roadhog;
-	}
-
-	actions
-	{
-		Event Player.Buffed = False;
 	}
 }
 
