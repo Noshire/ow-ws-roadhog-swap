@@ -225,6 +225,10 @@ rule("PlayerDealtDamage@Roadhog@Ability1:Swap&Tag")
 			Set Facing(Event Player, Event Player.TargetFacing, To World);
 		End;
 		Apply Impulse(Victim, Event Player.TargetFacing, Global.SwapFlingForce, To World, Cancel Contrary Motion XYZ);
+		"Cancel other Roadhog's Chain Hook on hit"
+		If(Hero Of(Victim) == Hero(Roadhog) && Is Using Ability 1(Victim));
+			Cancel Primary Action(Victim);
+		End;
 		Wait(0.100, Ignore Condition);
 		Call Subroutine(StunVictimIfEventPlayerBuffed);
 		Set Ability Cooldown(Event Player, Button(Ability 1), Global.ChainHookCooldownOnHit);
@@ -601,7 +605,7 @@ rule("[DEBUG]MatchStartsInstantly")
 	}
 }
 
-rule("[DEBUG]Interact:SelfDamage")
+rule("[DEBUG]DummyBots:UseAbility1")
 {
 	event
 	{
@@ -612,12 +616,14 @@ rule("[DEBUG]Interact:SelfDamage")
 
 	conditions
 	{
+		Is Dummy Bot(Event Player) == True;
 		Global.DEBUG == True;
-		Is Button Held(Event Player, Button(Interact)) == True;
 	}
 
 	actions
 	{
-		Damage(Event Player, Event Player, 50);
+		Wait(3, Ignore Condition);
+		Press Button(Event Player, Button(Ability 1));
+		Loop;
 	}
 }
