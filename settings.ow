@@ -79,6 +79,8 @@ variables
 		39: BuffedWindupDuration
 		40: SwapFlingForce
 		41: ChainHookCooldownOnHit
+		42: BuffedMoveSpeed
+		43: BuffedVerticalSpeed
 
 	player:
 		26: TargetPosition
@@ -124,6 +126,8 @@ rule("Init:GlobalVars")
 		Global.BuffedWindupDuration = 0.500;
 		Global.SwapFlingForce = 35;
 		Global.ChainHookCooldownOnHit = 5;
+		Global.BuffedMoveSpeed = 175;
+		Global.BuffedVerticalSpeed = 100;
 	}
 }
 
@@ -154,8 +158,8 @@ rule("Init:PlayerHUD")
 	actions
 	{
 		Create HUD Text(Event Player.TutorialVisible && Hero Of(Event Player) == Hero(Roadhog) ? Event Player : Null, Null, Null,
-			Custom String("{0} swaps places - jump over a pit and hook someone to score a kill.", Ability Icon String(Hero(Roadhog),
-			Button(Ability 1))), Left, 0, Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
+			Custom String("{0} swaps places and flings the victim away.", Ability Icon String(Hero(Roadhog), Button(Ability 1))), Left, 0,
+			Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
 		Create HUD Text(Event Player.TutorialVisible && Hero Of(Event Player) == Hero(Roadhog) ? Event Player : Null, Null, Null,
 			Custom String("{0} and {1} knock enemies back. Knockback scales with damage.", Ability Icon String(Hero(Roadhog), Button(
 			Primary Fire)), Ability Icon String(Hero(Roadhog), Button(Melee))), Left, 1, Color(White), Color(White), Color(White),
@@ -446,8 +450,8 @@ rule("PlayerVar[Buffed]:BecomeTrue")
 			/ Global.BuffedDuration)), Ability Icon String(Hero(Roadhog), Button(Ability 2)), Top, 100, Color(Yellow), Color(Yellow),
 			Values, Default Visibility);
 		Event Player.BuffedHUDId = Last Text ID;
-		Set Jump Vertical Speed(Event Player, 150);
-		Set Move Speed(Event Player, 175);
+		Set Jump Vertical Speed(Event Player, Global.BuffedVerticalSpeed);
+		Set Move Speed(Event Player, Global.BuffedMoveSpeed);
 	}
 }
 
@@ -521,7 +525,6 @@ rule("Subroutine:ApplyKnockback")
 
 	actions
 	{
-		Log To Inspector(Custom String("ApplyKnockback: Attacker={0}, Victim={1}", Event Player, Victim));
 		Set Environment Credit Player(Victim, Event Player);
 		If(Event Player.Buffed == True);
 			Victim.Knockback *= Global.KnockbackBuffedFactor;
