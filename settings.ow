@@ -70,7 +70,7 @@ variables
 		30: KnockbackMax
 		31: KnockbackBase
 		32: KnockbackDamageFactor
-		33: KnockbackUpFactor
+		33: GroundedKnockbackUpFactor
 		34: KnockbackBuffedFactor
 		35: KnockbackSelf
 		36: KnockbackSelfUltimate
@@ -114,7 +114,7 @@ rule("Init:GlobalVars")
 		Global.KnockbackMax = 70;
 		Global.KnockbackBase = 3;
 		Global.KnockbackDamageFactor = 2;
-		Global.KnockbackUpFactor = 0.250;
+		Global.GroundedKnockbackUpFactor = 0.250;
 		Global.KnockbackBuffedFactor = 1.500;
 		Global.KnockbackSelf = 12;
 		Global.KnockbackSelfUltimate = 4.500;
@@ -520,8 +520,9 @@ rule("Subroutine:ApplyKnockback")
 			Victim.Knockback *= Global.KnockbackBuffedFactor;
 		End;
 		Call Subroutine(StunVictimIfEventPlayerBuffed);
-		Apply Impulse(Victim, Vector(X Component Of(Event Direction), Global.KnockbackUpFactor, Z Component Of(Event Direction)),
-			Victim.Knockback, To World, Cancel Contrary Motion);
+		Apply Impulse(Victim, Vector(X Component Of(Event Direction), Is On Ground(Victim)
+			? Global.GroundedKnockbackUpFactor : Y Component Of(Event Direction), Z Component Of(Event Direction)), Victim.Knockback,
+			To World, Cancel Contrary Motion);
 	}
 }
 
