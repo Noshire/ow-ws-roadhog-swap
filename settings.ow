@@ -42,7 +42,7 @@ settings
 			Roadhog
 			{
 				Ammunition Clip Size Scalar: 60%
-				Chain Hook Cooldown Time: 40%
+				Chain Hook Cooldown Time: 10%
 				Damage Dealt: 50%
 				Healing Dealt: 30%
 				Jump Vertical Speed: 200%
@@ -78,6 +78,7 @@ variables
 		38: BuffedDuration
 		39: BuffedWindupDuration
 		40: SwapFlingForce
+		41: ChainHookCooldownOnHit
 
 	player:
 		26: TargetPosition
@@ -122,6 +123,7 @@ rule("Init:GlobalVars")
 		Global.BuffedDuration = 5;
 		Global.BuffedWindupDuration = 0.500;
 		Global.SwapFlingForce = 35;
+		Global.ChainHookCooldownOnHit = 5;
 	}
 }
 
@@ -225,6 +227,7 @@ rule("PlayerDealtDamage@Roadhog@Ability1:Swap&Tag")
 		Apply Impulse(Victim, Event Player.TargetFacing, Global.SwapFlingForce, To World, Cancel Contrary Motion XYZ);
 		Wait(0.100, Ignore Condition);
 		Call Subroutine(StunVictimIfEventPlayerBuffed);
+		Set Ability Cooldown(Event Player, Button(Ability 1), Global.ChainHookCooldownOnHit);
 	}
 }
 
